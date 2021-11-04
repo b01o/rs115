@@ -1,0 +1,83 @@
+name: rs115-cli
+version: "0.9"
+author: Yves Lelouch <@jkb_uhi>
+about: "Quick actions to use on 115.com"
+license: MIT
+
+settings:
+    - ArgRequiredElseHelp
+
+subcommands:
+    - set-cookies:
+        settings:
+            - ArgRequiredElseHelp
+        about: set cookies to login 115.com
+        aliases: ["s", "set", "cookie", "cookies"]
+        args:
+            - cookies:
+                value_name: COOKIES
+                index: 1
+                help: "Use this command to set your running cookies. alias name: s, set, cookie, cookies."
+                takes_value: true
+    - clean:
+        about: clean up login info
+
+    - check:
+        settings:
+            - ArgRequiredElseHelp
+        about: "use this command to check if the name is allowed for uploading"
+        aliases: ["c", "name"]
+        args:
+            - name:
+                value_name: NAME
+                index: 1
+                help: "validate the string"
+
+            - list-of-names:
+                short: f
+                long: file
+                takes_value: true
+                help: "Validate the string by providing a file contains list of names. Each line contains exact one name"
+                conflicts_with:
+                    - name
+
+            - output_forbiden_list:
+                short: o
+                long: output_forbiden_list
+                takes_value:  true
+                value_name: FILE
+                help: "[optional] Output the forbiden names to the <FILE>"
+                requires:
+                    - list-of-names
+
+            - output_failed_case:
+                short: x
+                long: output_failed_case
+                value_name: FILE
+                help: "[optional] Output the failded cases to a <FILE>"
+                requires:
+                    - list-of-names
+
+            - buffer_time:
+                short: b
+                long: output_failed_case
+                value_name: FILE
+                help: "[optional] Output the failded cases to a <FILE>"
+                requires:
+                    - list-of-names
+
+    - status:
+        about: "print status"
+        args:
+            - cookies:
+                short: c
+                long: cookies
+                help: print cookies
+                takes_value: false
+            - session:
+                short: s
+                long: session
+                help: print session
+                takes_value: false
+                conflicts_with:
+                    - cookies
