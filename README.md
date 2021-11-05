@@ -18,3 +18,43 @@ SUBCOMMANDS:
     set-cookies    set cookies to login 115.com
     status         print status
 ```
+
+## Usage:
+
+1. To login, set your cookies from 115.com:
+
+```
+./rs115 set-cookies "*******************COOKIES*********************"
+```
+
+2. To verify login status:
+
+```
+./rs115 status
+```
+
+3. To check a name is valid, for example "github"
+
+```
+
+./rs115 check github
+
+```
+
+4. To check many names at once, create a text file where list your name to check line by line.
+
+```
+./rs115 check -f <path to your checklist>
+```
+
+you can log the invalid case to a file by using `-o` flag, the failed case by using `-x` flag.
+
+```
+./rs115 check -f <checklist> -o <file of invalid names> -x <file of failed cases>
+```
+
+5. To clean your login session, use clean subcommand:
+
+```
+./rs115 clean
+```
