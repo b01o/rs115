@@ -1,5 +1,5 @@
 name: rs115-cli
-version: "0.9"
+version: "0.10"
 author: Yves Lelouch <@jkb_uhi>
 about: "Quick actions to use on 115.com"
 license: MIT
@@ -58,11 +58,10 @@ subcommands:
                 requires:
                     - list-of-names
 
-            - buffer_time:
-                short: b
-                long: output_failed_case
-                value_name: FILE
-                help: "[optional] Output the failded cases to a <FILE>"
+            - interval:
+                long: interval
+                value_name: ms
+                help: "Request interval Default: 1000ms"
                 requires:
                     - list-of-names
 

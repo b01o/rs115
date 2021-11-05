@@ -117,7 +117,13 @@ impl Runtime {
         file: T,
         mut forbiden_list: Option<U>,
         mut check_fail: Option<U>,
+        interval: Option<u64>,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut sleep_time = std::time::Duration::from_millis(1000);
+        if let Some(t) = interval {
+            sleep_time = std::time::Duration::from_millis(t);
+        }
+
         if let Some(ref session) = self.session {
             let folder_id = session.create_folder(0, "TMP_rs115".into())?;
 
@@ -148,7 +154,8 @@ impl Runtime {
                         }
                     }
                 };
-                std::thread::sleep(std::time::Duration::from_millis(1000));
+
+                std::thread::sleep(sleep_time);
             }
 
             if session.delete_one(0, folder_id).is_err() {

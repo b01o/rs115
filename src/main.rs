@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+use clap::ArgMatches;
 use rs115::functions::*;
 fn app() -> i32 {
     let mut rt = Runtime::new();
@@ -34,31 +35,21 @@ fn app() -> i32 {
 
             let mut forbiden_list: Option<File> = None;
             let mut failed_list: Option<File> = None;
+            let mut interval: Option<u64> = None;
 
-            if let Some(path) = matches.value_of("output_forbiden_list") {
-                let fpath = Path::new(path);
-                if fpath.exists() {
-                    eprintln!("file already exist: {}", path);
-                    return 1;
-                }
-                if let Ok(file) = File::create(fpath) {
-                    forbiden_list = Some(file);
-                } else {
-                    eprintln!("fail to create file: {}", path);
-                    return 1;
-                }
+            let rc = parse_optional_path(&matches, "output_forbiden_list", &mut forbiden_list);
+            if rc != 0 {
+                return rc;
             }
-
-            if let Some(path) = matches.value_of("output_failed_case") {
-                let fpath = Path::new(path);
-                if fpath.exists() {
-                    eprintln!("file already exist: {}", path);
-                    return 1;
-                }
-                if let Ok(file) = File::create(fpath) {
-                    failed_list = Some(file);
+            let rc = parse_optional_path(&matches, "output_failed_case", &mut failed_list);
+            if rc != 0 {
+                return rc;
+            }
+            if let Some(t) = matches.value_of("interval") {
+                if let Ok(t) = t.parse::<u64>() {
+                    interval = Some(t);
                 } else {
-                    eprintln!("fail to create file: {}", path);
+                    eprintln!("interval must be positive numbers");
                     return 1;
                 }
             }
@@ -66,7 +57,7 @@ fn app() -> i32 {
             let file = File::open(file).unwrap();
             let file = BufReader::new(file);
             if rt
-                .check_name_bulk_to_file(file, forbiden_list, failed_list)
+                .check_name_bulk_to_file(file, forbiden_list, failed_list, interval)
                 .is_err()
             {
                 return 1;
@@ -100,13 +91,31 @@ fn app() -> i32 {
             println!("{:#?}", rt);
         } else {
             if rt.has_cookies() {
-                println!("Normal");
+                println!("You are in! (cookies may expire anytime!)");
             } else {
                 println!("Warning: cookies not set!");
             }
         }
     }
     0
+}
+
+fn parse_optional_path(matches: &ArgMatches, name: &str, to: &mut Option<File>) -> i32 {
+    if let Some(path) = matches.value_of(name) {
+        let fpath = Path::new(path);
+        if fpath.exists() {
+            eprintln!("file already exist: {}", path);
+            return 1;
+        }
+        if let Ok(file) = File::create(fpath) {
+            *to = Some(file);
+            return 0;
+        } else {
+            eprintln!("fail to create file: {}", path);
+            return 1;
+        }
+    }
+    return 0;
 }
 
 fn main() {
