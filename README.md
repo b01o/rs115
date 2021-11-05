@@ -41,7 +41,7 @@ SUBCOMMANDS:
 
 ```
 
-4. To check many names at once, create a text file where list your name to check line by line.
+4. To check many names at once, create a text file where your names to check listed line by line.
 
 ```
 ./rs115 check -f <path to your checklist>
