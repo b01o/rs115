@@ -23,23 +23,6 @@ impl FromStr for Sha1JsonFolderEntity {
     }
 }
 
-// struct FolderRepr {
-//     name: String,
-//     files: Vec<FileRepr>,
-//     dirs: Vec<FolderRepr>,
-//     id: Option<u64>,
-// }
-
-// use std::rc::Weak;
-// struct FileRepr {
-//     name: String,
-//     size: u64,
-//     sha1: String,
-//     sha1_block: String,
-//     parent_folder: Option<Weak<FolderRepr>>,
-//     id: Option<u64>,
-// }
-
 #[derive(Debug)]
 struct Parse115SHA1Error();
 impl std::error::Error for Parse115SHA1Error {}

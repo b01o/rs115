@@ -12,11 +12,9 @@ fn app() -> i32 {
     let matches = App::from_yaml(yaml).get_matches();
 
     // clean subcommand
-    if let Some(_) = matches.subcommand_matches("clean") {
-        if rt.clean().is_err() {
-            eprintln!("clean failed, loggin info not found or unable to delete...");
-            return 1;
-        }
+    if matches.subcommand_matches("clean").is_some() && rt.clean().is_err() {
+        eprintln!("clean failed, loggin info not found or unable to delete...");
+        return 1;
     }
 
     // set-cookies subcommand
@@ -37,11 +35,11 @@ fn app() -> i32 {
             let mut failed_list: Option<File> = None;
             let mut interval: Option<u64> = None;
 
-            let rc = parse_optional_path(&matches, "output_forbiden_list", &mut forbiden_list);
+            let rc = parse_optional_path(matches, "output_forbiden_list", &mut forbiden_list);
             if rc != 0 {
                 return rc;
             }
-            let rc = parse_optional_path(&matches, "output_failed_case", &mut failed_list);
+            let rc = parse_optional_path(matches, "output_failed_case", &mut failed_list);
             if rc != 0 {
                 return rc;
             }
@@ -89,12 +87,10 @@ fn app() -> i32 {
             }
         } else if matches.is_present("session") {
             println!("{:#?}", rt);
+        } else if rt.has_cookies() {
+            println!("You are in! (cookies may expire anytime!)");
         } else {
-            if rt.has_cookies() {
-                println!("You are in! (cookies may expire anytime!)");
-            } else {
-                println!("Warning: cookies not set!");
-            }
+            println!("Warning: cookies not set!");
         }
     }
     0
@@ -115,7 +111,7 @@ fn parse_optional_path(matches: &ArgMatches, name: &str, to: &mut Option<File>) 
             return 1;
         }
     }
-    return 0;
+    0
 }
 
 fn main() {

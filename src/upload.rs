@@ -83,7 +83,7 @@ impl Session {
         let user_key = self.user_key.as_ref().ok_or(UploadError::MissingUserkey)?;
 
         let hash = sha1(format!("{}{}{}{}{}", user_id, file_id, quick_id, target, "0").as_str());
-        let sig_string = user_key.to_owned() + &hash + &END_STRING;
+        let sig_string = user_key.to_owned() + &hash + END_STRING;
         let sig = sha1(&sig_string);
 
         let param = [
@@ -156,7 +156,7 @@ impl Session {
             .send()?
             .json()?;
 
-        if res.state == false {
+        if !res.state {
             if let StringOri32::Number(20004) = res.errno {
                 // dir exist in the cloud
                 Err(UploadError::DirExist.into())

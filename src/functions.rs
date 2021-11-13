@@ -14,8 +14,8 @@ pub struct Runtime {
 impl Runtime {
     pub fn new() -> Self {
         let path = std::env::current_exe();
-        if path.is_ok() {
-            let mut path = path.unwrap();
+
+        if let Ok(mut path) = path {
             path.pop();
             path.push(COOKIES_FILE);
 
@@ -27,7 +27,7 @@ impl Runtime {
                 }
             }
         }
-        return Self { session: None };
+        Self { session: None }
     }
 
     pub fn has_cookies(&self) -> bool {
@@ -51,9 +51,7 @@ impl Runtime {
         }
 
         let f = File::create(path)?;
-
         let mut new_session = Session::new(cookies.to_owned());
-
         new_session.get_key_if_none()?;
 
         serde_json::to_writer(f, &new_session)?;
@@ -63,8 +61,7 @@ impl Runtime {
 
     pub fn clean(&self) -> Result<(), Box<dyn std::error::Error>> {
         let path = std::env::current_exe();
-        if path.is_ok() {
-            let mut path = path.unwrap();
+        if let Ok(mut path) = path {
             path.pop();
             path.push(COOKIES_FILE);
 
@@ -76,39 +73,44 @@ impl Runtime {
     }
 
     pub fn check_name(&self, name: &str) -> Result<bool, Box<dyn std::error::Error>> {
-        if let Some(ref session) = self.session {
-            let folder_id = session.create_folder(0, "TMP_rs115".into())?;
+        let session = match self.session {
+            Some(ref s) => s,
+            None => return Err("cookies not set".into()),
+        };
 
-            let hash = get_a_hash();
+        let folder_id = session
+            .create_folder(0, "TMP_rs115".into())
+            .expect("can create folder");
 
-            let is_uploaded = match session.upload115_sha1(
-                name.to_owned(),
-                "5".to_owned(),
-                hash.to_owned(),
-                hash,
-                folder_id,
-            ) {
-                Ok(_) => true,
-                Err(e) => {
-                    if e.is::<FileNameForbiddenError>() {
-                        if session.delete_one(0, folder_id).is_err() {
-                            eprintln!("fail to delete the folder TMP_rs115")
-                        }
-                        return Ok(false);
+        let hash = get_a_hash();
+
+        let is_uploaded = match session.upload115_sha1(
+            name.to_owned(),
+            "5".to_owned(),
+            hash.to_owned(),
+            hash,
+            folder_id,
+        ) {
+            Ok(_) => true,
+            Err(e) => {
+                if e.is::<FileNameForbiddenError>() {
+                    if session.delete_one(0, folder_id).is_err() {
+                        eprintln!("fail to delete the folder TMP_rs115")
                     }
-                    false
+                    return Ok(false);
                 }
-            };
-            if session.delete_one(0, folder_id).is_err() {
-                eprintln!("fail to delete the folder TMP_rs115")
+                false
             }
-            if is_uploaded {
-                return Ok(true);
-            } else {
-                return Err(UnknownError().into());
-            }
+        };
+
+        if session.delete_one(0, folder_id).is_err() {
+            eprintln!("fail to delete the folder TMP_rs115")
+        }
+
+        if is_uploaded {
+            Ok(true)
         } else {
-            return Err("cookies not set".into());
+            Err(UnknownError().into())
         }
     }
 
@@ -120,51 +122,59 @@ impl Runtime {
         interval: Option<u64>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut sleep_time = std::time::Duration::from_millis(1000);
+
         if let Some(t) = interval {
-            sleep_time = std::time::Duration::from_millis(t);
+            sleep_time = std::time::Duration::from_millis(t)
         }
 
-        if let Some(ref session) = self.session {
-            let folder_id = session.create_folder(0, "TMP_rs115".into())?;
+        let session = match self.session {
+            Some(ref s) => s,
+            None => return Err("cookies not set".into()),
+        };
 
-            for line in file.lines() {
-                let line = line?;
-                let hash = get_a_hash();
-                match session.upload115_sha1(
-                    line.to_owned(),
-                    "5".to_owned(),
-                    hash.to_owned(),
-                    hash,
-                    folder_id,
-                ) {
-                    Ok(_) => {
-                        println!("checked {}", line);
-                    }
-                    Err(e) => {
-                        if e.is::<FileNameForbiddenError>() {
-                            println!("NAME NOT ALLOW: {}", line);
-                            if let Some(ref mut forbiden_list) = forbiden_list {
-                                writeln!(forbiden_list, "{}", line)?;
-                            }
-                        } else {
-                            println!("failed to check: {}, cause by: {}", line, e);
-                            if let Some(ref mut check_fail) = check_fail {
-                                writeln!(check_fail, "{}", line)?;
-                            }
+        let folder_id = session.create_folder(0, "TMP_rs115".into())?;
+
+        for line in file.lines() {
+            let line = line?;
+            let hash = get_a_hash();
+            match session.upload115_sha1(
+                line.to_owned(),
+                "5".to_owned(),
+                hash.to_owned(),
+                hash,
+                folder_id,
+            ) {
+                Ok(_) => {
+                    println!("checked {}", line);
+                }
+                Err(e) => {
+                    if e.is::<FileNameForbiddenError>() {
+                        println!("NAME NOT ALLOW: {}", line);
+                        if let Some(ref mut forbiden_list) = forbiden_list {
+                            writeln!(forbiden_list, "{}", line)?;
+                        }
+                    } else {
+                        println!("failed to check: {}, cause by: {}", line, e);
+                        if let Some(ref mut check_fail) = check_fail {
+                            writeln!(check_fail, "{}", line)?;
                         }
                     }
-                };
+                }
+            };
 
-                std::thread::sleep(sleep_time);
-            }
-
-            if session.delete_one(0, folder_id).is_err() {
-                eprintln!("fail to delete the folder TMP_rs115");
-            }
-            return Ok(());
-        } else {
-            return Err("cookies not set".into());
+            std::thread::sleep(sleep_time);
         }
+
+        if session.delete_one(0, folder_id).is_err() {
+            eprintln!("fail to delete the folder TMP_rs115");
+        }
+        Ok(())
+    }
+}
+
+impl Default for Runtime {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
