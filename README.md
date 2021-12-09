@@ -33,7 +33,7 @@ SUBCOMMANDS:
 ./rs115 status
 ```
 
-3. To check a name is valid, for example "github"
+3. To check if a name is valid, for example "github"
 
 ```
 
@@ -47,7 +47,7 @@ SUBCOMMANDS:
 ./rs115 check -f <path to your checklist>
 ```
 
-you can log the invalid case to a file by using `-o` flag, the failed case by using `-x` flag.
+you can log the invalid cases to a file by using `-o` flag, the failed case by using `-x` flag.
 
 ```
 ./rs115 check -f <checklist> -o <file of invalid names> -x <file of failed cases>
